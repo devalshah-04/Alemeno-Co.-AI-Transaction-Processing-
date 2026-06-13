@@ -24,11 +24,28 @@ services:
       - "8000:8000"
     volumes:
       - ./app:/code
+      - uploads_data:/code/uploads
     environment:
       DATABASE_URL: postgresql://alemeno:alemeno_pass@postgres:5432/transactions_db
+      REDIS_URL: redis://redis:6379/0
+    depends_on:
+      - postgres
+      - redis
+
+  worker:
+    build: ./app
+    container_name: alemeno_worker
+    command: celery -A celery_app worker --loglevel=info
+    volumes:
+      - ./app:/code
+      - uploads_data:/code/uploads
+    environment:
+      DATABASE_URL: postgresql://alemeno:alemeno_pass@postgres:5432/transactions_db
+      REDIS_URL: redis://redis:6379/0
     depends_on:
       - postgres
       - redis
 
 volumes:
   postgres_data:
+  uploads_data:
