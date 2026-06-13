@@ -7,15 +7,16 @@ import pandas as pd
 
 from celery_app import celery_app
 from database import SessionLocal
-from models import Job, Transaction
+from models import Job, Transaction, JobSummary
 from pipeline.cleaning import clean_dataframe
 from pipeline.anomalies import detect_anomalies
+from pipeline.categorization import categorize_transactions
+from pipeline.narrative import generate_summary
 
 UPLOAD_DIR = "uploads"
 
 
 def find_upload_path(job_id: int) -> str:
-    """Locate the uploaded file for this job (saved as '<job_id>_<filename>')."""
     for filename in os.listdir(UPLOAD_DIR):
         if filename.startswith(f"{job_id}_"):
             return os.path.join(UPLOAD_DIR, filename)
@@ -23,7 +24,6 @@ def find_upload_path(job_id: int) -> str:
 
 
 def none_if_nan(value):
-    """Convert pandas NaN (from blank CSV cells) to None for database storage."""
     if isinstance(value, float) and math.isnan(value):
         return None
     return value
@@ -41,19 +41,16 @@ def process_job(job_id: int):
         db.commit()
 
         try:
-            # Read the raw CSV
             file_path = find_upload_path(job.id)
             df_raw = pd.read_csv(file_path)
             job.row_count_raw = len(df_raw)
 
-            # Step a: clean the data
             df_clean = clean_dataframe(df_raw)
             job.row_count_clean = len(df_clean)
 
-            # Step b: detect anomalies
             df_clean = detect_anomalies(df_clean)
+            df_clean = categorize_transactions(df_clean)
 
-            # Save each cleaned row as a Transaction
             for _, row in df_clean.iterrows():
                 txn = Transaction(
                     job_id=job.id,
@@ -67,15 +64,29 @@ def process_job(job_id: int):
                     account_id=row["account_id"],
                     is_anomaly=bool(row["is_anomaly"]),
                     anomaly_reason=row["anomaly_reason"],
+                    llm_category=none_if_nan(row["llm_category"]),
+                    llm_failed=bool(row["llm_failed"]),
                 )
                 db.add(txn)
+
+            # Step d: narrative summary
+            summary_data = generate_summary(df_clean)
+            job_summary = JobSummary(
+                job_id=job.id,
+                total_spend_inr=summary_data["total_spend_inr"],
+                total_spend_usd=summary_data["total_spend_usd"],
+                top_merchants=summary_data["top_merchants"],
+                anomaly_count=summary_data["anomaly_count"],
+                narrative=summary_data["narrative"],
+                risk_level=summary_data["risk_level"],
+            )
+            db.add(job_summary)
 
             job.status = "completed"
             job.completed_at = datetime.utcnow()
             db.commit()
 
         except Exception as e:
-            # If anything in the pipeline fails, record it instead of crashing silently
             job.status = "failed"
             job.error_message = str(e)
             db.commit()
