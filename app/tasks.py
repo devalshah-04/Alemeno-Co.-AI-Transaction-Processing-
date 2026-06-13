@@ -9,6 +9,7 @@ from celery_app import celery_app
 from database import SessionLocal
 from models import Job, Transaction
 from pipeline.cleaning import clean_dataframe
+from pipeline.anomalies import detect_anomalies
 
 UPLOAD_DIR = "uploads"
 
@@ -49,6 +50,9 @@ def process_job(job_id: int):
             df_clean = clean_dataframe(df_raw)
             job.row_count_clean = len(df_clean)
 
+            # Step b: detect anomalies
+            df_clean = detect_anomalies(df_clean)
+
             # Save each cleaned row as a Transaction
             for _, row in df_clean.iterrows():
                 txn = Transaction(
@@ -61,6 +65,8 @@ def process_job(job_id: int):
                     status=row["status"],
                     category=row["category"],
                     account_id=row["account_id"],
+                    is_anomaly=bool(row["is_anomaly"]),
+                    anomaly_reason=row["anomaly_reason"],
                 )
                 db.add(txn)
 
