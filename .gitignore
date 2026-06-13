@@ -1,0 +1,13 @@
+# Python cache
+__pycache__/
+*.pyc
+
+# Environment variables / secrets (we'll add a .env file soon for the LLM API key)
+.env
+
+# Uploaded CSVs (runtime data, not source code)
+app/uploads/
+
+# Editor folders
+.vscode/
+.idea/
