@@ -2,11 +2,12 @@
 
 An async backend pipeline that ingests a CSV of raw, messy financial transactions and turns it into a cleaned dataset, a set of flagged anomalies, AI-assigned categories, and an AI-generated spending report — all retrievable through a small REST API, with the entire stack starting via a single `docker compose up`.
 
-Built for the Alemeno Backend + DevOps Intern assignment.
+**Please refer to the Video walkthrough and architectur diagram below.**
 
 ## Video Walkthrough (3 min, system design + scaling discussion)
 
 https://github.com/user-attachments/assets/db417f4b-c4bf-49ef-8d41-e9de66a2159d
+
 
 ## Architecture Diagram
 
