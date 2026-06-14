@@ -6,7 +6,7 @@ Built for the Alemeno Backend + DevOps Intern assignment.
 
 ## Video Walkthrough (3 min, system design + scaling discussion)
 
-[Watch the video walkthrough here](Alemeno-architecture.mp4)
+https://github.com/user-attachments/assets/db417f4b-c4bf-49ef-8d41-e9de66a2159d
 
 ## Architecture Diagram
 
