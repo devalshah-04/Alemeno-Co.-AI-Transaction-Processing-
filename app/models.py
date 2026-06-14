@@ -17,6 +17,7 @@ class Job(Base):
     created_at = Column(DateTime, default=datetime.utcnow)
     completed_at = Column(DateTime, nullable=True)
     error_message = Column(Text, nullable=True)
+    file_hash = Column(String, unique=True, nullable=True, index=True)
 
     transactions = relationship("Transaction", back_populates="job")
     summary = relationship("JobSummary", back_populates="job", uselist=False)
