@@ -6,7 +6,7 @@ Built for the Alemeno Backend + DevOps Intern assignment.
 
 ## Video Walkthrough (3 min, system design + scaling discussion)
 
-! [Watch the video walkthrough here](Alemeno - transaction processing project.mp4)
+[Watch the video walkthrough here](Alemeno-architecture.mp4)
 
 ## Architecture Diagram
 
